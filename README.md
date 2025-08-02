@@ -1,5 +1,6 @@
 # Walmart Product Scraper — How This Code Works (Step-by-Step Technical Walkthrough)
 
+[!walmart thumbnail](assets/feature-dark.png)
 This scraper is a well-structured Python script that programmatically extracts detailed product information from Walmart.com. Here’s exactly how it operates:
 
 ---

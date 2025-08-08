@@ -1,88 +1,49 @@
-# Walmart Product Scraper — How This Code Works
-![walmart thumbnail](assets/feature-dark.png)
-This scraper is a well-structured Python script that programmatically extracts detailed product information from Walmart.com. Here’s exactly how it operates:
+# Walmart Product Data Scraper
 
----
+This project is a robust and scalable web scraper designed to extract detailed product information from Walmart’s online store. It systematically navigates Walmart’s search result pages for a wide range of technology and electronics-related products, gathering structured data and exporting it in JSON Lines (`.jsonl`) format.
 
-## 1. Initialization & Configuration
+## Objective
 
-- **Base URL & Output**: Sets Walmart’s base URL and output files for storing product data (`product_info.jsonl`) and failed URLs (`failed_urls.txt`).
-- **User-Agent List**: Contains multiple real browser User-Agent strings. Each HTTP request uses a random User-Agent to mimic genuine traffic and reduce blocking risk.
-- **Search Queries**: A list of product keywords (like "laptops", "smart watch", "xbox") representing categories or items to scrape.
+The primary goal of this scraper is to automate the collection of structured product data at scale from Walmart’s website for analytical, monitoring, or catalog-building purposes. It focuses on high-demand consumer electronics and related categories, enabling users to programmatically access pricing, availability, brand, rating, and product metadata.
 
----
+## Extracted Product Information
 
-## 2. Search Query & Pagination Loop
+For each product found through search queries, the scraper extracts:
+- **Product name**
+- **Brand**
+- **Current price**
+- **Availability status**
+- **Short description**
+- **Average customer rating**
+- **Total number of reviews**
+- **Item ID**
+- **Thumbnail image URL**
 
-- The script processes each search query one by one.
-- For each query, it starts scraping from page 1, incrementing the page number after processing each page, up to a maximum of 99 pages.
-- For every search results page, it constructs a URL like:  
-  `https://www.walmart.com/search?q={query}&page={page_number}`
+## Key Features
 
----
+- **Smart Search Querying**: Covers a comprehensive list of electronics-related keywords (e.g. `laptops`, `routers`, `cameras`, `xbox`, `modem`) to retrieve a wide product variety.
+- **Pagination Handling**: Automatically iterates through paginated search results for each query, up to a predefined limit or until no more results are available.
+- **URL Deduplication**: Ensures unique product URLs are processed only once using an in-memory `set`, improving efficiency and avoiding redundant data.
+- **Structured HTML Parsing**: Utilizes BeautifulSoup to parse and navigate HTML and embedded JavaScript data structures reliably.
+- **Retry Logic & Backoff Strategy**: Implements retry mechanisms with exponential backoff to handle transient HTTP failures, such as rate limits and timeouts.
+- **Robust Error Logging**: Records failed URLs for both search pages and individual product pages, allowing for future reprocessing or debugging.
+- **Randomized User-Agent Rotation**: Helps avoid detection and throttling by rotating through multiple realistic browser user-agent strings.
+- **Modular, Clean Codebase**: Separation of concerns between search page scraping, product detail extraction, and data writing, improving readability and maintainability.
 
-## 3. Extracting Product Links
+## Output
 
-- Sends a **GET** request to the search page with randomized headers.
-- Parses the HTML using **BeautifulSoup**.
-- Finds all `<a>` tags where the href contains `/ip/`, which uniquely identifies product pages on Walmart.
-- Filters out URLs already seen to avoid duplicates.
-- Collects all new product URLs into a queue for detailed scraping.
+The scraper outputs the collected data to a file named `product_info.jsonl`, where each line is a standalone JSON object containing one product’s structured data. This format is ideal for downstream processing, transformation, or database ingestion.
 
----
-
-## 4. Detailed Product Data Extraction
-
-For each product URL:
-
-- Sends another **GET** request with a randomized User-Agent.
-- Parses the product page HTML, specifically looking for a `<script id="__NEXT_DATA__">` tag that contains product metadata as JSON.
-- Loads this JSON and extracts key product fields including:
-  - Price (`currentPrice.price`)
-  - Review count and average rating
-  - Product name and brand
-  - Availability status
-  - Thumbnail image URL
-  - Short description
-
----
-
-## 5. Robust Error Handling & Retries
-
-- Uses up to 5 retries per request with exponential backoff delays (`3^attempt` seconds).
-- Specifically handles HTTP `412 Precondition Failed` errors by skipping that URL to avoid infinite loops.
-- Logs failed URLs to `failed_urls.txt` for later review.
-- If errors persist after retries, the scraper gracefully skips the problematic URL or query.
-
----
-
-## 6. Polite Scraping Practices
-
-- Introduces random delays of 1 to 3 seconds between requests to avoid overwhelming Walmart servers.
-- Rotates User-Agent headers to simulate different browsers and devices.
-- Tracks and skips already processed URLs to avoid redundant requests.
-
----
-
-## 7. Output Format
-
-- Writes product data incrementally to a JSON Lines file (`product_info.jsonl`), where each line is a valid JSON object.
-- This format is ideal for easy parsing, database import, or feeding into downstream analytics or ML pipelines.
-
----
-
-## Summary
-
-This scraper intelligently:
-
-- Navigates Walmart’s search pages for multiple queries and paginations.
-- Extracts product URLs dynamically without hardcoded links.
-- Parses structured JSON data embedded in product pages for accurate and rich metadata.
-- Handles network or server errors with retries and logging.
-- Uses anti-blocking strategies like User-Agent rotation and randomized delays.
-- Produces clean, structured, and scalable output ideal for commercial or research use.
-
----
-
-*This approach ensures the scraper is both powerful and resilient, providing reliable data collection for large-scale Walmart product datasets.*
-
+### Sample Output (1 line per product):
+```json
+{
+  "price": 299.99,
+  "review_count": 134,
+  "item_id": "781523942",
+  "avg_rating": 4.3,
+  "product_name": "HP 15.6\" Laptop",
+  "brand": "HP",
+  "availability": "InStock",
+  "image_url": "https://i5.walmartimages.com/asr/xyz.jpg",
+  "short_description": "Reliable laptop with AMD Ryzen processor..."
+}

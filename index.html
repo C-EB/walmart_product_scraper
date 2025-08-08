@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Walmart Product Data Scraper</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --walmart-blue: #0071CE;
+            --walmart-yellow: #FFC220;
+            --light-gray: #F8F9FA;
+            --dark-gray: #343A40;
+            --text-gray: #6C757D;
+            --white: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--dark-gray);
+            background-color: var(--white);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--walmart-blue) 0%, #0057a3 100%);
+            color: var(--white);
+            padding: 120px 0 80px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>') repeat;
+            top: -50%;
+            left: -50%;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(1deg); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .hero .subtitle {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: var(--walmart-yellow);
+            color: var(--dark-gray);
+            padding: 15px 35px;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            animation: fadeInUp 1s ease-out 0.4s both;
+            box-shadow: 0 4px 15px rgba(255, 194, 32, 0.3);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 194, 32, 0.4);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section {
+            padding: 80px 0;
+        }
+
+        .section:nth-child(even) {
+            background: var(--light-gray);
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--walmart-blue);
+            text-align: center;
+            margin-bottom: 60px;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--walmart-yellow);
+            border-radius: 2px;
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        .about-card {
+            background: var(--white);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .about-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .about-card h3 {
+            color: var(--walmart-blue);
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .tech-badge {
+            background: var(--walmart-blue);
+            color: var(--white);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .data-fields {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .field-item {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--walmart-yellow);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .field-name {
+            font-weight: 600;
+            color: var(--walmart-blue);
+        }
+
+        .field-desc {
+            color: var(--text-gray);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 30px;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 30px 0;
+            font-family: 'Monaco', 'Consolas', monospace;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--walmart-blue), var(--walmart-yellow));
+            border-radius: 12px 12px 0 0;
+        }
+
+        .feature-card h3 {
+            color: var(--walmart-blue);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .architecture-flow {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .arch-step {
+            background: var(--white);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            position: relative;
+        }
+
+        .arch-step::after {
+            content: '→';
+            position: absolute;
+            right: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--walmart-yellow);
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .arch-step:last-child::after {
+            display: none;
+        }
+
+        .arch-number {
+            background: var(--walmart-blue);
+            color: var(--white);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin: 0 auto 15px;
+        }
+
+        .screenshots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .screenshot-placeholder {
+            background: var(--light-gray);
+            border: 2px dashed var(--text-gray);
+            border-radius: 12px;
+            padding: 60px 20px;
+            text-align: center;
+            color: var(--text-gray);
+            transition: all 0.3s ease;
+        }
+
+        .screenshot-placeholder:hover {
+            border-color: var(--walmart-blue);
+            background: rgba(0, 113, 206, 0.05);
+        }
+
+        .screenshot-placeholder h4 {
+            margin-bottom: 10px;
+            color: var(--walmart-blue);
+        }
+
+        .resources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .resource-link {
+            display: block;
+            background: var(--white);
+            padding: 25px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--dark-gray);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .resource-link:hover {
+            transform: translateY(-3px);
+            border-color: var(--walmart-blue);
+            color: var(--walmart-blue);
+        }
+
+        .footer {
+            background: var(--dark-gray);
+            color: var(--white);
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .footer a {
+            color: var(--walmart-yellow);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero .subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .arch-step::after {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Walmart Product Data Scraper</h1>
+                <p class="subtitle">Advanced web scraping solution for extracting comprehensive product information from Walmart's e-commerce platform</p>
+                <a href="https://github.com/C-EB/walmart_product_scraper" class="cta-button">View on GitHub</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">About the Project</h2>
+            <div class="about-grid">
+                <div class="about-card">
+                    <h3>Project Objective</h3>
+                    <p>This scraper automates the extraction of product data from Walmart's website, enabling businesses and researchers to gather comprehensive product information for market analysis, competitive research, and catalog building.</p>
+                </div>
+                <div class="about-card">
+                    <h3>Use Cases</h3>
+                    <ul style="margin-top: 15px; padding-left: 20px;">
+                        <li>Market research and price monitoring</li>
+                        <li>Competitive analysis</li>
+                        <li>Product catalog creation</li>
+                        <li>Inventory management insights</li>
+                        <li>Consumer behavior analysis</li>
+                    </ul>
+                </div>
+                <div class="about-card">
+                    <h3>Technology Stack</h3>
+                    <div class="tech-stack">
+                        <span class="tech-badge">Python 3.x</span>
+                        <span class="tech-badge">BeautifulSoup</span>
+                        <span class="tech-badge">Requests</span>
+                        <span class="tech-badge">JSON</span>
+                        <span class="tech-badge">Queue Management</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Extracted Data Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Extracted Data Fields</h2>
+            <p style="text-align: center; margin-bottom: 40px; color: var(--text-gray); font-size: 1.1rem;">
+                Our scraper extracts 9 key data points from each product listing
+            </p>
+            <div class="data-fields">
+                <div class="field-item">
+                    <div class="field-name">Product Name</div>
+                    <div class="field-desc">Full product title and description</div>
+                </div>
+                <div class="field-item">
+                    <div class="field-name">Price</div>
+                    <div class="field-desc">Current selling price in USD</div>
+                </div>
+                <div class="field-item">
+                    <div class="field-name">Brand</div>
+                    <div class="field-desc">Manufacturer or brand information</div>
+                </div>
+                <div class="field-item">
+                    <div class="field-name">Average Rating</div>
+                    <div class="field-desc">Customer review score (0-5 stars)</div>
+                </div>
+                <div class="field-item">
+                    <div class="field-name">Review Count</div>
+                    <div class="field-desc">Total number of customer reviews</div>
+                </div>
+                <div class="field-item">
+                    <div class="field-name">Availability Status</div>
+                    <div class="field-desc">In stock, out of stock, or limited availability</div>
+                </div>
+                <div class="field-item">
+                    <div class="field-name">Image URL</div>
+                    <div class="field-desc">Product thumbnail image link</div>
+                </div>
+                <div class="field-item">
+                    <div class="field-name">Item ID</div>
+                    <div class="field-desc">Unique Walmart product identifier</div>
+                </div>
+                <div class="field-item">
+                    <div class="field-name">Short Description</div>
+                    <div class="field-desc">Brief product summary or key features</div>
+                </div>
+            </div>
+            
+            <div class="code-block">
+{
+  "price": 299.99,
+  "review_count": 1247,
+  "item_id": "12345678",
+  "avg_rating": 4.3,
+  "product_name": "Dell Inspiron 15 3000 Laptop",
+  "brand": "Dell",
+  "availability": "IN_STOCK",
+  "image_url": "https://i5.walmartimages.com/...",
+  "short_description": "15.6-inch HD display, Intel Core i3..."
+}
+            </div>
+        </div>
+    </section>
+
+    <!-- Key Features Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Key Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>🔄 Intelligent Retry Logic</h3>
+                    <p>Implements exponential backoff strategy with up to 5 retry attempts per failed request, ensuring maximum data recovery even during network instability.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>📄 Smart Pagination Handling</h3>
+                    <p>Automatically navigates through search result pages (up to 99 pages per query) to collect comprehensive product listings across multiple categories.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🛡️ Advanced Anti-Detection</h3>
+                    <p>Rotates between 6 different user agents and implements random delays (1-3 seconds) to mimic human browsing behavior and avoid blocking.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🗂️ Duplicate Prevention</h3>
+                    <p>Uses URL tracking with set-based deduplication to ensure each product is scraped only once, preventing data redundancy.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>⚡ Queue-Based Processing</h3>
+                    <p>Implements efficient queue management system for handling large volumes of product URLs in an organized, sequential manner.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>📊 Comprehensive Error Logging</h3>
+                    <p>Maintains detailed logs of failed URLs and operations, enabling debugging and data quality assurance for large-scale scraping operations.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Project Architecture</h2>
+            <p style="text-align: center; margin-bottom: 40px; color: var(--text-gray); font-size: 1.1rem;">
+                Modular design with four core components working in harmony
+            </p>
+            <div class="architecture-flow">
+                <div class="arch-step">
+                    <div class="arch-number">1</div>
+                    <h3>Search Handler</h3>
+                    <p>Processes 27 predefined search queries across technology categories, extracting product URLs from search result pages.</p>
+                </div>
+                <div class="arch-step">
+                    <div class="arch-number">2</div>
+                    <h3>URL Queue Manager</h3>
+                    <p>Manages discovered product URLs using Python's queue system, ensuring efficient processing and preventing duplicates.</p>
+                </div>
+                <div class="arch-step">
+                    <div class="arch-number">3</div>
+                    <h3>Product Data Parser</h3>
+                    <p>Extracts structured data from individual product pages by parsing Walmart's JSON-LD structured data within HTML.</p>
+                </div>
+                <div class="arch-step">
+                    <div class="arch-number">4</div>
+                    <h3>JSONL Exporter</h3>
+                    <p>Streams extracted data directly to JSONL format for efficient storage and easy integration with data analysis tools.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Resources Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Resources & Documentation</h2>
+            <div class="resources-grid">
+                <a href="https://github.com/C-EB/walmart_product_scraper" class="resource-link">
+                    <h3>📁 GitHub Repository</h3>
+                    <p>Complete source code with installation instructions and usage examples</p>
+                </a>
+                <a href="https://pypi.org/project/beautifulsoup4/" class="resource-link">
+                    <h3>🍲 BeautifulSoup Documentation</h3>
+                    <p>Official documentation for the HTML parsing library used in this project</p>
+                </a>
+                <a href="https://docs.python-requests.org/" class="resource-link">
+                    <h3>🌐 Requests Library</h3>
+                    <p>HTTP library documentation for making web requests in Python</p>
+                </a>
+                <a href="https://github.com/C-EB/walmart_product_scraper/blob/main/scraped%20data/product_info_snippet.jsonl" class="resource-link">
+                    <h3>📊 Sample Dataset</h3>
+                    <p>Download sample JSONL output with 1000+ product records for testing</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Walmart Product Data Scraper. Built with ❤️ using Python & BeautifulSoup.</p>
+            <p style="margin-top: 10px;">
+                <a href="#">Portfolio</a> • 
+                <a href="#">Contact</a> • 
+                <a href="https://github.com/C-EB">GitHub</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>
